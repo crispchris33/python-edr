@@ -1,40 +1,98 @@
 import sqlite3
 
 # Connect to SQLite database
-conn = sqlite3.connect('D:\\Hashing DB\\RDS_2023.06.1_modern_minimal.db')
+conn = sqlite3.connect('D:\Hashing DB\RDS_2023.06.1_modern_minimal.db')
 cursor = conn.cursor()
 
-# Create comparison_matches table if it does not exist
+# Create comparison_event table
 cursor.execute("""
-    CREATE TABLE IF NOT EXISTS comparison_matches (
-        match_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        file_name_nist TEXT,
-        sha256_nist TEXT,
-        sha1_nist TEXT,
-        md5_nist TEXT,
-        file_name_local TEXT,
-        sha256_local TEXT,
-        sha1_local TEXT,
-        md5_local TEXT,
-        date_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    CREATE TABLE IF NOT EXISTS comparison_event (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        start_date_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
 """)
 
-# Fill comparison_matches table with matching entries from FILE and scanned_file
-cursor.execute("""
-    INSERT INTO comparison_matches (file_name_nist, sha256_nist, sha1_nist, md5_nist, file_name_local, sha256_local, sha1_local, md5_local)
-    SELECT f.file_name AS file_name_nist,
-           f.sha256 AS sha256_nist,
-           f.sha1 AS sha1_nist,
-           f.md5 AS md5_nist,
-           s.file_name AS file_name_local,
-           s.sha256 AS sha256_local,
-           s.sha1 AS sha1_local,
-           s.md5 AS md5_local
+try:
+    # Create match_found table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS match_found (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        file_name TEXT UNIQUE,
+        file_size INTEGER,
+        md5 VARCHAR,
+        sha1 VARCHAR,
+        sha256 VARCHAR,
+        event_id INTEGER,
+        date_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+except Exception as e:
+    print(e)
+
+# Insert a new record into comparison_event table and get its id
+cursor.execute("INSERT INTO comparison_event DEFAULT VALUES")
+event_id = cursor.lastrowid
+
+# Comparing md5 hashes
+print("Starting md5 comparison...")
+cursor.execute(f"""
+    INSERT OR IGNORE INTO match_found (file_name, file_size, md5, event_id)
+    SELECT f.file_name,
+           f.file_size,
+           f.md5,
+           {event_id}
     FROM FILE f
-    JOIN scanned_file s ON (f.sha256 = s.sha256 OR f.sha1 = s.sha1 OR f.md5 = s.md5)
+    JOIN scanned_file s ON f.md5 = s.md5
 """)
 
-# Commit changes and close connection to the database
+cursor.execute(f"""
+    UPDATE match_found
+    SET md5 = (SELECT f.md5 FROM FILE f JOIN scanned_file s ON f.md5 = s.md5 WHERE match_found.file_name = f.file_name),
+        event_id = {event_id}
+    WHERE match_found.file_name IN (SELECT f.file_name FROM FILE f JOIN scanned_file s ON f.md5 = s.md5)
+""")
 conn.commit()
+
+# Comparing sha1 hashes
+print("Starting sha1 comparison...")
+cursor.execute(f"""
+    INSERT OR IGNORE INTO match_found (file_name, file_size, sha1, event_id)
+    SELECT f.file_name,
+           f.file_size,
+           f.sha1,
+           {event_id}
+    FROM FILE f
+    JOIN scanned_file s ON f.sha1 = s.sha1
+""")
+
+cursor.execute(f"""
+    UPDATE match_found
+    SET sha1 = (SELECT f.sha1 FROM FILE f JOIN scanned_file s ON f.sha1 = s.sha1 WHERE match_found.file_name = f.file_name),
+        event_id = {event_id}
+    WHERE match_found.file_name IN (SELECT f.file_name FROM FILE f JOIN scanned_file s ON f.sha1 = s.sha1)
+""")
+conn.commit()
+
+# Comparing sha256 hashes
+print("Starting sha256 comparison...")
+cursor.execute(f"""
+    INSERT OR IGNORE INTO match_found (file_name, file_size, sha256, event_id)
+    SELECT f.file_name,
+           f.file_size,
+           f.sha256,
+           {event_id}
+    FROM FILE f
+    JOIN scanned_file s ON f.sha256 = s.sha256
+""")
+
+cursor.execute(f"""
+    UPDATE match_found
+    SET sha256 = (SELECT f.sha256 FROM FILE f JOIN scanned_file s ON f.sha256 = s.sha256 WHERE match_found.file_name = f.file_name),
+        event_id = {event_id}
+    WHERE match_found.file_name IN (SELECT f.file_name FROM FILE f JOIN scanned_file s ON f.sha256 = s.sha256)
+""")
+conn.commit()
+
+# Commit changes and close connection to the database
 conn.close()
