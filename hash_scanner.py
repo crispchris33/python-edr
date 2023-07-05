@@ -2,8 +2,17 @@ import os
 import hashlib
 import sqlite3
 from datetime import datetime
+import json
 
-#from permissions import check_permissions_and_run
+# Load user configuration
+with open('user_config.json') as json_file:
+    config = json.load(json_file)
+
+# Get config variables
+db_path = config['database']['path']
+db_filename = config['database']['filename']
+root_dir = config['scanning']['root_dir']
+file_types = tuple(config['scanning']['file_types'])  # convert to tuple for 'endswith'
 
 # Function to generate sha256, sha1, and md5 hash of a file
 def generate_hashes(file_path):
@@ -15,6 +24,7 @@ def generate_hashes(file_path):
             sha256_hash.update(byte_block)
             sha1_hash.update(byte_block)
             md5_hash.update(byte_block)
+    
     return sha256_hash.hexdigest(), sha1_hash.hexdigest(), md5_hash.hexdigest()
 
 # Get current date and time
@@ -26,7 +36,7 @@ def main():
     print("Running the main script...")
 
     # Connect to SQLite database (it will be created if it doesn't exist)
-    conn = sqlite3.connect('D:\Hashing DB\RDS_2023.06.1_modern_minimal.db')
+    conn = sqlite3.connect(db_path + db_filename)
     cursor = conn.cursor()
 
     # Create table if it doesn't exist
@@ -44,11 +54,13 @@ def main():
     # Initialize the exception list
     exceptions = []
 
-    root_dir = 'C:/'  # root directory to start from
+    # Initialize a counter for new records
+    new_records = 0
+
     for foldername, subfolders, filenames in os.walk(root_dir):
         for filename in filenames:
             # Check file extension
-            if not (filename.endswith('.exe') or filename.endswith('.dll')):
+            if not filename.endswith(file_types):
                 continue
 
             try:
@@ -78,6 +90,7 @@ def main():
                     VALUES (?, ?, ?, ?, ?)
                 """, (sha256_hash, sha1_hash, md5_hash, file_path, file_size))
 
+                new_records += 1
 
             # Exceptions
             except PermissionError as e:
@@ -94,6 +107,9 @@ def main():
     # Commit changes and close connection to the database
     conn.commit()
     conn.close()
+
+    # Print the number of new records added
+    print(f"Added {new_records} new records.")
 
     # Create a HTML file and write exceptions into it
     try:

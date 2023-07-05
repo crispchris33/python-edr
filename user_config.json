@@ -1,0 +1,11 @@
+{
+    "database": {
+      "path": "D:/Hashing DB/",
+      "filename": "RDS_2023.06.1_modern_minimal.db"
+    },
+    "scanning": {
+      "root_dir": "C:/",
+      "file_types": [".exe", ".dll"]
+    }
+  }
+  
