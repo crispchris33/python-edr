@@ -16,7 +16,6 @@
         <table id="myTable" class="table table-striped table-hover">
           <thead>
             <tr>
-              <th scope="col">Tlsh</th>
               <th scope="col">File Name</th>
               <th scope="col">File Size</th>
               <th scope="col">Date Time</th>
@@ -41,8 +40,15 @@
                     "type": "POST"
                 },
                 "columns": [
-                    { "data": "tlsh" },
-                    { "data": "file_name" },
+                    { 
+                      "data": "file_name",
+                      "render": function(data, type, row, meta){
+                          if(type === 'display'){
+                              data = '<a href="single_item?file=' + encodeURIComponent(data) + '">' + data + '</a>';
+                          }
+                          return data;
+                      }
+                    },
                     { "data": "file_size" },
                     { "data": "date_time" }
                 ]

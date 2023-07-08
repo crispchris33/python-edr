@@ -1,0 +1,20 @@
+
+table.dataTable thead th, 
+table.dataTable tbody td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.single_item_table {
+    margin: 0 auto;
+    clear: both;
+    table-layout: fixed;
+    word-wrap:break-word;
+}
+table.dataTable {
+    width: 100%;
+    max-width: 1300px;
+    table-layout: fixed;
+    margin: 0 auto;
+}
