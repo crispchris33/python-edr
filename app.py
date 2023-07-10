@@ -4,7 +4,7 @@ import json
 import os
 import urllib.parse
 from urllib.parse import unquote
-
+from virus_check import run_vt_check
 
 app = Flask(__name__)
 
@@ -228,6 +228,20 @@ def data_tlsh():
         "recordsFiltered": total_records,
         "data": data
     })
+
+
+
+# VT Stuff
+
+@app.route('/run_vt_check', methods=['POST'])
+def handle_vt_check():
+    data = request.get_json()
+    hash_type = data['hash_type']
+    hash_value = data['hash_value']
+
+    run_vt_check(hash_type, hash_value)
+
+    return jsonify({'message': 'Scan complete'})
 
 
 if __name__ == "__main__":
