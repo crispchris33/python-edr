@@ -33,20 +33,32 @@ def actions():
 def monitoring():
     return render_template('monitoring.html')
 
+#index.html
 @app.route('/data', methods=['POST'])
 def data():
     draw = request.form.get('draw')
     start = request.form.get('start', type=int)
     length = request.form.get('length', type=int)
+    search_value = request.form.get('search[value]', default="")
+    columns = ["file_name", "file_size", "date_time"]
+    order_column = request.form.get('order[0][column]', type=int, default=0)
+    order_column = min(order_column, len(columns) - 1)
+    order_direction = request.form.get('order[0][dir]', default="asc")
+    order_column_name = columns[order_column]
     
     con = sqlite3.connect(db_full_path)
     con.row_factory = sqlite3.Row  # column access by name
     cur = con.cursor()
 
-    cur.execute("SELECT * FROM tlsh_scanner LIMIT ? OFFSET ?", (length, start))
+    cur.execute(f"""
+        SELECT * 
+        FROM tlsh_scanner
+        WHERE file_name LIKE ? OR file_size LIKE ? OR date_time LIKE ?
+        ORDER BY {order_column_name} {order_direction}
+        LIMIT ? OFFSET ?
+    """, (f"%{search_value}%", f"%{search_value}%", f"%{search_value}%", length, start))
     rows = cur.fetchall()
 
-    # converts rows to dictionaries
     data = [dict(row) for row in rows]
 
     cur.execute("SELECT COUNT(*) FROM tlsh_scanner")
@@ -116,19 +128,28 @@ def data_tlsh_scanner():
 def data_sha256():
     raw_file_name = request.form.get('file')
     file_name = unquote(raw_file_name)
-    print(f"File name 2: {file_name}")
-    app.logger.info('Received file_name: %s', file_name)
     draw = request.form.get('draw')
     start = request.form.get('start', type=int)
     length = request.form.get('length', type=int)
+    search_value = request.form.get('search[value]', default="")
+    columns = ["sha256", "path", "file_size", "date_time"]
+    order_column = request.form.get('order[0][column]', type=int, default=0)
+    order_column = min(order_column, len(columns) - 1)
+    order_direction = request.form.get('order[0][dir]', default="asc")
+    order_column_name = columns[order_column]
 
     con = sqlite3.connect(db_full_path)
     con.row_factory = sqlite3.Row
     cur = con.cursor()
 
-    cur.execute("SELECT sha256, path, file_size, date_time FROM scanned_file WHERE file_name = ? LIMIT ? OFFSET ?", (file_name, length, start))
+    cur.execute(f"""
+        SELECT sha256, path, file_size, date_time
+        FROM scanned_file
+        WHERE file_name = ? AND (sha256 LIKE ? OR path LIKE ? OR file_size LIKE ? OR date_time LIKE ?)
+        ORDER BY {order_column_name} {order_direction}
+        LIMIT ? OFFSET ?
+    """, (file_name, f"%{search_value}%", f"%{search_value}%", f"%{search_value}%", f"%{search_value}%", length, start))
     rows = cur.fetchall()
-    print(rows)
 
     data = [dict(row) for row in rows]
 
