@@ -104,13 +104,49 @@
                 "columns": [
                     {
                         "data": null,
-                        "defaultContent": "<button class='btn btn-primary vt-check'>Check</button>"
+                        "defaultContent": "<button class='btn btn-primary vt-check'>Check</button>",
+                        "createdCell": function (td, cellData, rowData, row, col) {
+                            if (rowData.positives > 0) {
+                                $(td).find('button').removeClass('btn-primary').addClass('btn-danger').prop('disabled', true);
+                            } else if (rowData.positives == 0) {
+                                $(td).find('button').removeClass('btn-primary').addClass('btn-success').prop('disabled', true);
+                            }
+                        }
                     },
-                    { "data": "sha256" },
+                    {
+                            "data": "sha256",
+                            "render": function(data, type, row) {
+                                return '<a href="/hash_result?hash=' + data + '&file_name=' + file_name + '">' + data + '</a>';
+                            }
+                    },
                     { "data": "path" },
                     { "data": "file_size" },
                     { "data": "date_time" }
-                ]
+                ],
+                "createdRow": function (row, data, dataIndex) {
+                    $.ajax({
+                        url: '/get_hash_status',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            'hash_value': data.sha256
+                        }),
+                        success: function (response) {
+                            if (response.error) {
+                                console.log(response.error);
+                            } else {
+                                if (response.positives > 0) {
+                                    $(row).find('.vt-check').addClass('btn-danger');
+                                } else {
+                                    $(row).find('.vt-check').addClass('btn-success');
+                                }
+                            }
+                        },
+                        error: function (error) {
+                            console.error(error);
+                        }
+                    });
+                },
             });
 
             $('#table_sha1').DataTable({
@@ -203,4 +239,5 @@
             });
         });
     </script>
+    <!-- <script src="/static/js/custom.js"></script -->
 {% endblock %}

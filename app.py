@@ -4,9 +4,12 @@ import json
 import os
 import urllib.parse
 from urllib.parse import unquote
-from virus_check import run_vt_check
+from scripts.virus_check import run_vt_check
 
 app = Flask(__name__)
+
+with open('user_config.json') as json_file:
+    config = json.load(json_file)
 
 # Loading DB info
 with open('user_config.json') as f:
@@ -232,7 +235,7 @@ def data_tlsh():
     length = request.form.get('length', type=int)
 
     con = sqlite3.connect(db_full_path)
-    con.row_factory = sqlite3.Row  # Allows row to be addressed by column name
+    con.row_factory = sqlite3.Row
     cur = con.cursor()
 
     cur.execute("SELECT tlsh, path, file_size, date_time FROM tlsh_scanner WHERE file_name = ? LIMIT ? OFFSET ?", (file_name, length, start))
@@ -250,19 +253,49 @@ def data_tlsh():
         "data": data
     })
 
+#single_item.html - retrieve hash check status
+@app.route('/get_hash_status', methods=['POST'])
+def get_hash_status():
+    hash_value = request.json.get('hash_value')
 
+    con = sqlite3.connect(db_full_path)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+
+    cur.execute("SELECT positives FROM virus_total_results WHERE hash = ? OR sha1 = ? OR sha256 = ? OR md5 = ?", 
+                (hash_value, hash_value, hash_value, hash_value,))
+    result = cur.fetchone()
+
+    if result:
+        positives = result[0]
+        return jsonify({'positives': positives})
+    else:
+        return jsonify({'error': 'hash not found'}), 404
 
 # VT Stuff
 
 @app.route('/run_vt_check', methods=['POST'])
 def handle_vt_check():
-    data = request.get_json()
-    hash_type = data['hash_type']
-    hash_value = data['hash_value']
+    try:
 
-    run_vt_check(hash_type, hash_value)
+        data = request.get_json()
+        hash_type = data['hash_type']
+        hash_value = data['hash_value']
 
-    return jsonify({'message': 'Scan complete'})
+        run_vt_check(hash_type, hash_value)
+
+        return jsonify({'message': 'Scan complete'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+#hash_result.html
+
+@app.route('/hash_result')
+def hash_result():
+    hash_value = request.args.get('hash')
+    file_name = request.args.get('file_name')
+    return render_template('hash_result.html', hash=hash_value, file_name=file_name)
+
 
 
 if __name__ == "__main__":
