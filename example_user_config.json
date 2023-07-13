@@ -1,0 +1,15 @@
+{
+    "database": {
+      "path": "",
+      "filename": ""
+    },
+    "scanning": {
+      "root_dir": "C:/",
+      "file_types": [".exe", ".dll"]
+    },
+    "file_monitoring": {
+      "file_types": [".doc", ".docx", ".xls", ".xlsx", ".pdf", ".scr", ".vbs", ".rtf", ".jpeg", ".jpg", ".zip", ".txt"]
+    },
+    "virustotal_api_key": "",
+    "status_file_path": ""
+  }
