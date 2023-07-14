@@ -294,8 +294,18 @@ def handle_vt_check():
 def hash_result():
     hash_value = request.args.get('hash')
     file_name = request.args.get('file_name')
-    return render_template('hash_result.html', hash=hash_value, file_name=file_name)
 
+    con = sqlite3.connect(db_full_path)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+
+    cur.execute("SELECT * FROM virus_total_results WHERE hash = ?", (hash_value,))
+    result = cur.fetchone()
+
+    if result:
+        return render_template('hash_result.html', hash=hash_value, file_name=file_name, scan_date=result['scan_date'], positives=result['positives'], permalink=result['permalink'], scan_result=result['scan_result'], scan_id=result['scan_id'], sha1=result['sha1'], sha256=result['sha256'], md5=result['md5'], resource=result['resource'], response_code=result['response_code'])
+    else:
+        return render_template('hash_result.html', hash=hash_value, file_name=file_name)
 
 
 if __name__ == "__main__":
