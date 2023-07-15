@@ -3,7 +3,8 @@ Unregister-Event -SourceIdentifier FileDeleted -ErrorAction SilentlyContinue
 Unregister-Event -SourceIdentifier FileChanged -ErrorAction SilentlyContinue
 Unregister-Event -SourceIdentifier FileRenamed -ErrorAction SilentlyContinue
 
-$config = Get-Content -Raw -Path '.\user_config.json' | ConvertFrom-Json
+$configPath = Join-Path -Path $PSScriptRoot -ChildPath '..\user_config.json'
+$config = Get-Content -Raw -Path $configPath | ConvertFrom-Json
 $dbPath = Join-Path -Path $config.database.path -ChildPath $config.database.filename
 
 #monitoring
@@ -11,7 +12,8 @@ $folder = $config.scanning.root_dir
 $monitoredExtensions = $config.file_monitoring.file_types
 
 # SQLite .NET library
-Add-Type -Path '.\System.Data.SQLite.dll'
+$dllPath = Join-Path -Path $PSScriptRoot -ChildPath '..\System.Data.SQLite.dll'
+Add-Type -Path $dllPath
 
 $connection = New-Object -TypeName System.Data.SQLite.SQLiteConnection -ArgumentList ("Data Source=$dbPath")
 $connection.Open()
@@ -19,11 +21,11 @@ $connection.Open()
 $command = $connection.CreateCommand()
 $command.CommandText = "
 CREATE TABLE IF NOT EXISTS file_monitor_events (
-    FileName VARCHAR,
-    FilePath VARCHAR,
-    FileExtension VARCHAR,
-    EventTime TIMESTAMP,
-    EventType TEXT
+    file_name VARCHAR,
+    path VARCHAR,
+    file_extension VARCHAR,
+    date_time TIMESTAMP,
+    event_type TEXT
 )"
 $command.ExecuteNonQuery()
 
@@ -38,7 +40,9 @@ $fsw = New-Object IO.FileSystemWatcher $folder -Property @{
 #when a file event occurs
 $action = {
     param($sender, $eventArgs)
-    
+
+    $directoryPath = [System.IO.Path]::GetDirectoryName($eventArgs.FullPath)
+    $fileName = [System.IO.Path]::GetFileName($eventArgs.FullPath)
     $extension = [System.IO.Path]::GetExtension($eventArgs.FullPath)
 
     if ($extension -in $monitoredExtensions) {
@@ -46,15 +50,20 @@ $action = {
         $connection.Open()
 
         $command = $connection.CreateCommand()
-        $command.CommandText = "INSERT INTO file_monitor_events (FileName, FilePath, FileExtension, EventTime, EventType) VALUES (@Name, @Path, @Extension, @Time, @Type)"
+        $command.CommandText = "INSERT INTO file_monitor_events (file_name, path, file_extension, date_time, event_type) VALUES (@Name, @Path, @Extension, @Time, @Type)"
 
-        $command.Parameters.AddWithValue("@Name", $eventArgs.Name) | Out-Null
-        $command.Parameters.AddWithValue("@Path", $eventArgs.FullPath) | Out-Null
+        $command.Parameters.AddWithValue("@Name", $fileName) | Out-Null
+        $command.Parameters.AddWithValue("@Path", $directoryPath) | Out-Null
         $command.Parameters.AddWithValue("@Extension", $extension) | Out-Null
         $command.Parameters.AddWithValue("@Time", $(Get-Date -Format u)) | Out-Null
         $command.Parameters.AddWithValue("@Type", $eventArgs.ChangeType) | Out-Null
 
-        $command.ExecuteNonQuery()
+        try {
+            $command.ExecuteNonQuery() | Out-Null
+        } catch {
+            Write-Output "$(Get-Date): Failed to insert event into database. Error: $($_.Exception.Message)"
+        }
+
         $connection.Close()
 
         # TODO: Add hashing function here later
