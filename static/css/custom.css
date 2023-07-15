@@ -18,3 +18,17 @@ table.dataTable {
     table-layout: fixed;
     margin: 0 auto;
 }
+.hash_result_body {
+    margin: 0;
+    padding: 0;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+.copyable:active {
+    transform: scale(0.9);
+}
+.clicked {
+    background-color: #eee;  /* Or any color you prefer */
+    transition: background-color 0.5s ease;
+  }  

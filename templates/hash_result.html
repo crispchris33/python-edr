@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="hash_result_body">
+  <h1>Virus Total Hash Scan Result</h1>
+  <p class="text-muted">Notice: Click an item to copy</p>
+
+  <div class="my-4">
+    <h2 class="mb-3">File: <span id="file_name" class="copyable">{{ file_name }}</span></h2>
+    <h4>Hash: <span id="hash" class="copyable">{{ hash }}</span></h4>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h4 class="card-title">Scan Details</h4>
+      <p class="mb-1">Scan Date: <span id="scan_date" class="copyable">{{ scan_date }}</span></p>
+      <p class="mb-1">Positives: <span id="positives" class="copyable">{{ positives }}</span></p>
+      <p class="mb-1">Permalink: <span id="permalink" class="copyable">{{ permalink }}</span></p>
+      <p class="mb-1">Scan Result: <span id="scan_result" class="copyable">{{ scan_result }}</span></p>
+      <p class="mb-1">Scan ID: <span id="scan_id" class="copyable">{{ scan_id }}</span></p>
+      <p class="mb-1">Resource: <span id="resource" class="copyable">{{ resource }}</span></p>
+      <p class="mb-1">Response Code: <span id="response_code" class="copyable">{{ response_code }}</span></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">Hashes</h4>
+      <p class="mb-1">SHA1: <span id="sha1" class="copyable">{{ sha1 }}</span></p>
+      <p class="mb-1">SHA256: <span id="sha256" class="copyable">{{ sha256 }}</span></p>
+      <p class="mb-1">MD5: <span id="md5" class="copyable">{{ md5 }}</span></p>
+    </div>
+  </div>
+{% endblock %}
