@@ -25,7 +25,11 @@ CREATE TABLE IF NOT EXISTS file_monitor_events (
     path VARCHAR,
     file_extension VARCHAR,
     date_time TIMESTAMP,
-    event_type TEXT
+    event_type TEXT,
+    sha256 VARCHAR,
+    sha1 VARCHAR,
+    md5 VARCHAR,
+    tlsh VARCHAR
 )"
 $command.ExecuteNonQuery()
 
@@ -37,7 +41,8 @@ $fsw = New-Object IO.FileSystemWatcher $folder -Property @{
     NotifyFilter = [IO.NotifyFilters]'FileName, LastWrite, DirectoryName'
 }
 
-#when a file event occurs
+#when a file event occurs from the file event manager
+#Create, Delete, Change, Rename
 $action = {
     param($sender, $eventArgs)
 
@@ -46,17 +51,28 @@ $action = {
     $extension = [System.IO.Path]::GetExtension($eventArgs.FullPath)
 
     if ($extension -in $monitoredExtensions) {
+        
+        # Generate file hashes
+        $sha256Hash = (Get-FileHash -Path $eventArgs.FullPath -Algorithm SHA256).Hash
+        $sha1Hash = (Get-FileHash -Path $eventArgs.FullPath -Algorithm SHA1).Hash
+        $md5Hash = (Get-FileHash -Path $eventArgs.FullPath -Algorithm MD5).Hash
+        $tlshHash = python .\generate_tlsh.py $eventArgs.FullPath
+
         $connection = New-Object -TypeName System.Data.SQLite.SQLiteConnection -ArgumentList ("Data Source=$dbPath")
         $connection.Open()
 
         $command = $connection.CreateCommand()
-        $command.CommandText = "INSERT INTO file_monitor_events (file_name, path, file_extension, date_time, event_type) VALUES (@Name, @Path, @Extension, @Time, @Type)"
+        $command.CommandText = "INSERT INTO file_monitor_events (file_name, path, file_extension, date_time, event_type, sha256, sha1, md5, tlsh) VALUES (@Name, @Path, @Extension, @Time, @Type, @Sha256, @Sha1, @Md5, @Tlsh)"
 
         $command.Parameters.AddWithValue("@Name", $fileName) | Out-Null
         $command.Parameters.AddWithValue("@Path", $directoryPath) | Out-Null
         $command.Parameters.AddWithValue("@Extension", $extension) | Out-Null
         $command.Parameters.AddWithValue("@Time", $(Get-Date -Format u)) | Out-Null
         $command.Parameters.AddWithValue("@Type", $eventArgs.ChangeType) | Out-Null
+        $command.Parameters.AddWithValue("@Sha256", $sha256Hash) | Out-Null
+        $command.Parameters.AddWithValue("@Sha1", $sha1Hash) | Out-Null
+        $command.Parameters.AddWithValue("@Md5", $md5Hash) | Out-Null
+        $command.Parameters.AddWithValue("@Tlsh", $tlshHash) | Out-Null
 
         try {
             $command.ExecuteNonQuery() | Out-Null
