@@ -4,7 +4,6 @@ from datetime import datetime
 import tlsh
 import json
 
-# Load config
 with open('user_config.json') as json_file:
     config = json.load(json_file)
 
@@ -13,7 +12,6 @@ db_filename = config['database']['filename']
 root_dir = config['scanning']['root_dir']
 file_types = tuple(config['scanning']['file_types']) 
 
-# Function to generate tlsh
 def generate_tlsh_hash(file_path):
     with open(file_path, "rb") as f:
         data = f.read()
@@ -54,7 +52,6 @@ def main():
                 tlsh_hash = generate_tlsh_hash(file_path)
                 file_size = os.path.getsize(file_path)
 
-                # Check if the file already exists
                 cursor.execute("""
                     SELECT * FROM tlsh_scanner 
                     WHERE tlsh = ? AND file_name = ? AND path = ? AND file_size = ?
@@ -64,7 +61,6 @@ def main():
                     exceptions.append(f"Duplicate record found for file {file_path}. Skipping.")
                     continue
 
-                # Insert data into db
                 cursor.execute("""
                     INSERT INTO tlsh_scanner(tlsh, file_name, path, file_size)
                     VALUES (?, ?, ?, ?)
@@ -72,7 +68,6 @@ def main():
 
                 new_records += 1
 
-            # Exceptions
             except PermissionError as e:
                 exceptions.append(f"Permission denied for file {file_path}. Error message: {e}. Skipping.")
 
@@ -89,7 +84,6 @@ def main():
 
     print(f"Added {new_records} new records.")
 
-    # Create exceptions file
     try:
         with open(f"exception_list_{file_date_time}.html", "w") as f:
             f.write("<html>\n<body>\n<table>\n")

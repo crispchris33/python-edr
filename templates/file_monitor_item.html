@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!--page title-->
+    <script>
+        const file_name = "{{ data[0] }}";
+        document.title = file_name;
+    </script>
+
+    <!--generate layout-->
+    <div class="container">
+        <h1 id="page-title">File: {{ data[0] }}</h1>
+        <table class="table table-striped table-hover">
+            <tbody>
+                <tr>
+                    <th scope="row">Path</th>
+                    <td>{{ data[1] }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">File Extension</th>
+                    <td>{{ data[2] }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Date Time</th>
+                    <td>{{ data[3] }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Event Type</th>
+                    <td>{{ data[4] }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">SHA-256</th>
+                    <td>{{ data[5] }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">SHA1</th>
+                    <td>{{ data[6] }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">MD5</th>
+                    <td>{{ data[7] }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">TLSH</th>
+                    <td>{{ data[8] }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

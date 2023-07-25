@@ -81,8 +81,6 @@ $action = {
         }
 
         $connection.Close()
-
-        # TODO: Add hashing function here later
     }
 }
 

@@ -47,22 +47,26 @@ def run_vt_check(hash_type, hash_value):
 
     response = vt_api_call(hash_type, hash_value)
     
-    scan_date = response['data']['attributes']['last_analysis_date']
-    positives = response['data']['attributes']['last_analysis_stats'].get('malicious', 0)
-    total = response['data']['attributes']['last_analysis_stats'].get('total', 0)
-    permalink = response['data']['attributes'].get('permalink', "Not Available")
-    scan_result = response['data']['attributes'].get('scan_result', "Not Available")
-    scan_id = response['data'].get('id', "Not Available")
-    sha1 = response['data']['attributes'].get('sha1', "Not Available")
-    sha256 = response['data']['attributes'].get('sha256', "Not Available")
-    md5 = response['data']['attributes'].get('md5', "Not Available")
-    resource = response['data'].get('resource', "Not Available")
-    response_code = response['data'].get('response_code', "Not Available")
+    if 'data' in response:  #-33
 
-    c.execute("""
-            INSERT INTO virus_total_results (hash, scan_date, positives, permalink, scan_result, scan_id, sha1, sha256, md5, resource, response_code)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (hash_value, scan_date, positives, permalink, scan_result, scan_id, sha1, sha256, md5, resource, response_code))
+        scan_date = response['data']['attributes']['last_analysis_date']
+        positives = response['data']['attributes']['last_analysis_stats'].get('malicious', 0)
+        total = response['data']['attributes']['last_analysis_stats'].get('total', 0)
+        permalink = response['data']['attributes'].get('permalink', "Not Available")
+        scan_result = response['data']['attributes'].get('scan_result', "Not Available")
+        scan_id = response['data'].get('id', "Not Available")
+        sha1 = response['data']['attributes'].get('sha1', "Not Available")
+        sha256 = response['data']['attributes'].get('sha256', "Not Available")
+        md5 = response['data']['attributes'].get('md5', "Not Available")
+        resource = response['data'].get('resource', "Not Available")
+        response_code = response['data'].get('response_code', "Not Available")
 
-    conn.commit()
+        c.execute("""
+                INSERT INTO virus_total_results (hash, scan_date, positives, permalink, scan_result, scan_id, sha1, sha256, md5, resource, response_code)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (hash_value, scan_date, positives, permalink, scan_result, scan_id, sha1, sha256, md5, resource, response_code))
+
+        conn.commit()
+    else: #-33
+        print(f"No 'data' field in the response: {response}") #-33
     conn.close()

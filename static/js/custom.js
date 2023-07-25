@@ -12,14 +12,78 @@ $(document).ready(function() {
       })
       toastList.forEach(toast => toast.show());
   
-      // Change the content of the toast body
       $('.toast-body').text("Copied: " + $(this).text());
   
-      // Add a temporary class for the click effect
+      //temporary class for the click effect
       $(this).addClass("clicked");
       setTimeout(function() {
         $(".clicked").removeClass("clicked");
       }, 500);
     });
-  });
-  
+});
+
+      //file_monitor stuff
+$(document).ready(function() {
+    if ($("#fileMonitorTable").length) {
+      var table = $('#fileMonitorTable').DataTable({
+        retrieve: true,
+        processing: true,
+        serverSide: true,
+        paging: true,
+        ordering: true,
+        info: false,
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        "ajax": {
+          "url": "/file_monitor_data",
+          "type": "POST",
+          "data": function (d) {
+            var eventTypeValues = [];
+            $('#fileMonitorTable_wrapper input[type="checkbox"]:checked').each(function () {
+                eventTypeValues.push($(this).val());
+            });
+            d.eventTypes = eventTypeValues;
+        },
+        },
+        "order": [[3, 'asc']],
+        "columns": [
+          { 
+            "data": "file_name", 
+            "render": function(data, type, row, meta) {
+              if(type === 'display'){
+                data = '<a href="/file_monitor_item/' + encodeURIComponent(data) + '">' + data + '</a>';
+              }
+              return data;
+            }
+          },
+          { "data": "path" },
+          { "data": "file_extension" },
+          { "data": "date_time" },
+          { "data": "event_type" }
+        ]
+    });
+
+    var checkboxes = $(
+      '<div class="col-md-6">' +
+      '<table class="table table-bordered mt-3">' +
+      '<thead><tr><th colspan="2" class="text-center">Event Type</th></tr></thead>' +
+      '<tbody>' +
+      '<tr>' +
+      '<td><label><input type="checkbox" name="eventType" value="1"> 1 - Created</label></td>' +
+      '<td><label><input type="checkbox" name="eventType" value="2"> 2 - Deleted</label></td>' +
+      '</tr>' +
+      '<tr>' +
+      '<td><label><input type="checkbox" name="eventType" value="3"> 3 - Changed</label></td>' +
+      '<td><label><input type="checkbox" name="eventType" value="4"> 4 - Renamed</label></td>' +
+      '</tr>' +
+      '</tbody>' +
+      '</table>' +
+      '</div>'
+    );
+    
+    $('#fileMonitorTable_wrapper').prepend(checkboxes);
+    
+    $('#fileMonitorTable_wrapper').on('change', 'input[type="checkbox"]', function () {
+      table.ajax.reload();
+    });  
+  }
+});

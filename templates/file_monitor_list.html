@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>File Monitor Events</h1>
+    <table id="fileMonitorTable" class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Path</th>
+                <th>File Extension</th>
+                <th>Date Time</th>
+                <th>Event Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data %}
+            <tr>
+                <td><a href="{{ url_for('file_monitor_item', file_name=item[0]) }}">{{ item[0] }}</a></td>
+                <td>{{ item[1] }}</td>
+                <td>{{ item[2] }}</td>
+                <td>{{ item[3] }}</td>
+                <td>{{ item[4] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

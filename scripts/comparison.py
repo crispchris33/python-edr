@@ -1,10 +1,11 @@
+#this script will compare the object db in the user_config.json to the nist db of known files
+#existing hash values are sha256, sha1, md5
+
 import sqlite3
 
-# Connect to SQLite database
 conn = sqlite3.connect('D:\Hashing DB\RDS_2023.06.1_modern_minimal.db')
 cursor = conn.cursor()
 
-# Create comparison_event table
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS comparison_event (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -13,7 +14,6 @@ cursor.execute("""
 """)
 
 try:
-    # Create match_found table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS match_found (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,11 +30,9 @@ try:
 except Exception as e:
     print(e)
 
-# Insert a new record into comparison_event table and get its id
 cursor.execute("INSERT INTO comparison_event DEFAULT VALUES")
 event_id = cursor.lastrowid
 
-# Comparing md5 hashes
 print("Starting md5 comparison...")
 cursor.execute(f"""
     INSERT OR IGNORE INTO match_found (file_name, file_size, md5, event_id)
@@ -54,7 +52,6 @@ cursor.execute(f"""
 """)
 conn.commit()
 
-# Comparing sha1 hashes
 print("Starting sha1 comparison...")
 cursor.execute(f"""
     INSERT OR IGNORE INTO match_found (file_name, file_size, sha1, event_id)
@@ -74,7 +71,6 @@ cursor.execute(f"""
 """)
 conn.commit()
 
-# Comparing sha256 hashes
 print("Starting sha256 comparison...")
 cursor.execute(f"""
     INSERT OR IGNORE INTO match_found (file_name, file_size, sha256, event_id)
@@ -94,5 +90,4 @@ cursor.execute(f"""
 """)
 conn.commit()
 
-# Commit changes and close connection to the database
 conn.close()

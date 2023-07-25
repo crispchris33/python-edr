@@ -1,5 +1,19 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
-  <!-- Code here -->
+<div class="container mt-4">
+    <h1>Monitoring</h1>
+    <div class="card">
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <h4><a href="{{ url_for('index') }}">Scanned Program List</a></h4>
+                </li>
+                <li class="list-group-item">
+                    <h4><a href="{{ url_for('file_monitor_list') }}">File Monitoring</a></h4>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
 {% endblock %}

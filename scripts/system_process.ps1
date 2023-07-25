@@ -1,4 +1,5 @@
-# Gather services data
+#get data
+
 $servicesData = Get-Service | ForEach-Object {
     $status = $_.Status
     $name = $_.Name
@@ -12,12 +13,12 @@ $servicesData = Get-Service | ForEach-Object {
     }
 }
 
-# Compute statistics
 $totalServices = $servicesData.Count
 $runningServices = ($servicesData | Where-Object {$_.Status -eq "Running"}).Count
 $stoppedServices = ($servicesData | Where-Object {$_.Status -eq "Stopped"}).Count
 
-# Prepare HTML content
+#generate report
+
 $htmlContent = "
 <html>
 <head>
@@ -62,7 +63,6 @@ $htmlContent = "
 <tbody>
 "
 
-# Add services data to HTML content
 for ($i=0; $i -lt $servicesData.Count; $i++) {
     $htmlContent += "
     <tr>
@@ -75,7 +75,6 @@ for ($i=0; $i -lt $servicesData.Count; $i++) {
     "
 }
 
-# Complete HTML content
 $htmlContent += "
 </tbody>
 </table>
@@ -83,19 +82,12 @@ $htmlContent += "
 </html>
 "
 
-# Specify output directory
 $outputDirectory = "./Reports/Services"
 
-# Create output directory if it doesn't exist
 if (-not (Test-Path -Path $outputDirectory)) {
     New-Item -ItemType Directory -Force -Path $outputDirectory
 }
 
-# Generate HTML filename with date-time stamp
 $htmlFileName = "$outputDirectory/system_processes_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
-
-# Write HTML content to file
 $htmlContent | Out-File -FilePath $htmlFileName
-
-# Output HTML filename to console
 $htmlFileName

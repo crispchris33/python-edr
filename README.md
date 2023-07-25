@@ -1,5 +1,10 @@
 # hash-script
 
+Start Virtual Environment:
+source venv/bin/activate
+
+Start Flask
+flask run
 
 
 # File System Monitor

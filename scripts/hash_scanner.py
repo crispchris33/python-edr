@@ -4,7 +4,7 @@ import sqlite3
 from datetime import datetime
 import json
 
-# Load config
+#config
 with open('user_config.json') as json_file:
     config = json.load(json_file)
 
@@ -13,7 +13,7 @@ db_filename = config['database']['filename']
 root_dir = config['scanning']['root_dir']
 file_types = tuple(config['scanning']['file_types']) 
 
-# Function to generate sha256, sha1, and md5
+#generate sha256, sha1, and md5
 def generate_hashes(file_path):
     sha256_hash = hashlib.sha256()
     sha1_hash = hashlib.sha1()
