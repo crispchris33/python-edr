@@ -333,7 +333,7 @@ def hash_result():
     con.row_factory = sqlite3.Row
     cur = con.cursor()
 
-    cur.execute("SELECT * FROM virus_total_results WHERE hash = ?", (hash_value,))
+    cur.execute("SELECT * FROM virus_total_results WHERE hash = ? OR sha1 = ? OR sha256 = ? OR md5 = ?", (hash_value, hash_value, hash_value, hash_value))
     result = cur.fetchone()
 
     if result:
