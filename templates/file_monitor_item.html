@@ -9,40 +9,53 @@
 
     <!--generate layout-->
     <div class="container">
-        <h1 id="page-title">File: {{ data[0] }}</h1>
+        <h1 id="page-title" class="copyable">File: {{ data[0] }}</h1>
+        <p class="text-muted">Notice: Click an item to copy</p>
         <table class="table table-striped table-hover">
             <tbody>
                 <tr>
                     <th scope="row">Path</th>
-                    <td>{{ data[1] }}</td>
+                    <td class="copyable">{{ data[1] }}</td>
                 </tr>
                 <tr>
                     <th scope="row">File Extension</th>
-                    <td>{{ data[2] }}</td>
+                    <td class="copyable">{{ data[2] }}</td>
                 </tr>
                 <tr>
                     <th scope="row">Date Time</th>
-                    <td>{{ data[3] }}</td>
+                    <td class="copyable">{{ data[3] }}</td>
                 </tr>
                 <tr>
                     <th scope="row">Event Type</th>
-                    <td>{{ data[4] }}</td>
+                    <td class="copyable">{{ data[4] }}</td>
                 </tr>
                 <tr>
                     <th scope="row">SHA-256</th>
-                    <td>{{ data[5] }}</td>
+                    <td>
+                        {% set color = get_indicator(data[5]) %}
+                        <button class="vt-check btn {{ color }}" data-hash-type="sha256" data-hash-value="{{ data[5] }}">Check VT</button>
+                        <span class="copyable">{{ data[5] }}</span>
+                    </td>
                 </tr>
                 <tr>
                     <th scope="row">SHA1</th>
-                    <td>{{ data[6] }}</td>
+                    <td>
+                        {% set color = get_indicator(data[6]) %}
+                        <button class="vt-check btn {{ color }}" data-hash-type="sha1" data-hash-value="{{ data[6] }}">Check VT</button>
+                        <span class="copyable">{{ data[6] }}</span>
+                    </td>
                 </tr>
                 <tr>
                     <th scope="row">MD5</th>
-                    <td>{{ data[7] }}</td>
+                    <td>
+                        {% set color = get_indicator(data[7]) %}
+                        <button class="vt-check btn {{ color }}" data-hash-type="md5" data-hash-value="{{ data[7] }}">Check VT</button>
+                        <span class="copyable">{{ data[7] }}</span>
+                    </td>
                 </tr>
                 <tr>
                     <th scope="row">TLSH</th>
-                    <td>{{ data[8] }}</td>
+                    <td class="copyable">{{ data[8] }}</td>
                 </tr>
             </tbody>
         </table>

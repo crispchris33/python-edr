@@ -1,12 +1,11 @@
 import os
-
-dir_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-config_path = os.path.join(dir_path, 'user_config.json')
-
 import json
 import requests
 import sqlite3
 from datetime import datetime
+
+dir_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+config_path = os.path.join(dir_path, 'user_config.json')
 
 with open(config_path) as json_file:
     config = json.load(json_file)
@@ -47,7 +46,7 @@ def run_vt_check(hash_type, hash_value):
 
     response = vt_api_call(hash_type, hash_value)
     
-    if 'data' in response:  #-33
+    if 'data' in response:
 
         scan_date = response['data']['attributes']['last_analysis_date']
         positives = response['data']['attributes']['last_analysis_stats'].get('malicious', 0)
@@ -66,7 +65,12 @@ def run_vt_check(hash_type, hash_value):
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (hash_value, scan_date, positives, permalink, scan_result, scan_id, sha1, sha256, md5, resource, response_code))
 
-        conn.commit()
-    else: #-33
-        print(f"No 'data' field in the response: {response}") #-33
+    else:
+        print(f"No 'data' field in the response: {response}")
+        c.execute("""
+            INSERT INTO virus_total_results (hash, scan_date, positives, permalink, scan_result, scan_id, sha1, sha256, md5, resource, response_code)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (hash_value, datetime.now().strftime("%Y-%m-%dT%H:%M:%S"), -1, "Not Available", "Not Available", "Not Available", "Not Available", "Not Available", "Not Available", "Not Available", -1))
+
+    conn.commit()
     conn.close()

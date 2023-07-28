@@ -44,7 +44,7 @@ def data():
     length = request.form.get('length', type=int)
     search_value = request.form.get('search[value]', default="")
     columns = ["file_name", "file_size", "date_time"]
-    order_column = request.form.get('order[0][column]', type=int, default=0)
+    order_column = request.form.get('order[2][column]', type=int, default=0)
     order_column = min(order_column, len(columns) - 1)
     order_direction = request.form.get('order[0][dir]', default="asc")
     order_column_name = columns[order_column]
@@ -427,6 +427,23 @@ def file_monitor_item(file_name):
     conn.close()
 
     return render_template('file_monitor_item.html', data=data)
+
+@app.template_global()
+def get_indicator(hash_value):
+    conn = sqlite3.connect(db_full_path)
+    c = conn.cursor()
+    
+    c.execute("SELECT positives FROM virus_total_results WHERE hash = ?", (hash_value,))
+    result = c.fetchone()
+    
+    if result is None:
+        return "btn-primary"
+    elif result[0] == -1:
+        return "btn-warning"
+    elif result[0] > 0:
+        return "btn-danger"
+    else:
+        return "btn-success"
 
 
 if __name__ == "__main__":

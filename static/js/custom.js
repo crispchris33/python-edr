@@ -87,3 +87,24 @@ $(document).ready(function() {
     });  
   }
 });
+
+//hash status check - will check virus_total_result table for hash value existance
+$(document).ready(function() {
+  $('.vt-check').click(function() {
+      var hash_type = $(this).data('hash-type');
+      var hash_value = $(this).data('hash-value');
+
+      $.ajax({
+          url: '/run_vt_check',
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({hash_type: hash_type, hash_value: hash_value}),
+          success: function(result) {
+              console.log(result);
+          },
+          error: function(error) {
+              console.log(error);
+          }
+      });
+  });
+});

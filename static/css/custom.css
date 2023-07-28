@@ -29,6 +29,6 @@ table.dataTable {
     transform: scale(0.9);
 }
 .clicked {
-    background-color: #eee;  /* Or any color you prefer */
+    background-color: #eee;
     transition: background-color 0.5s ease;
   }  
