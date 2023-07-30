@@ -1,11 +1,25 @@
 # hash-script
 
+
+# Set up 
+
+Check Virtual Environment Dependencies
+    -requirements.txt
+
+Setup user_config.json
+    -change name of "example_user_config.json" > "user_config.json"
+
+Launch Flask in the Venv
 Start Virtual Environment:
-source venv/bin/activate
+"source venv/bin/activate"
 
-Start Flask
-flask run
+Start Flask:
+"flask run"
 
+Populate Database With Scripts:
+-hash_scanner.py
+-tlsh_scanner.py
+-File System Monitor(below)
 
 # File System Monitor
 

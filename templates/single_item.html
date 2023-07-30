@@ -1,13 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <!--page title-->
     <script>
         const file_name = "{{ file_name }}";
         document.title = file_name;
     </script>
 
-    <!--generate layout-->
     <div class="container">
       <h1 id="page-title">File: {{ file_name }}</h1>
 
@@ -255,7 +253,9 @@
 
             $(document).on('click', '.vt-check', function() {
                 var tableId = $(this).closest('table').attr('id');
-                var hashType = tableId.split('_')[1]; // send sha256, sha1, md5 or tlsh
+                
+                // send sha256, sha1, md5 or tlsh
+                var hashType = tableId.split('_')[1]; 
 
                 var row_data = $('#' + tableId).DataTable().row($(this).parents('tr')).data();
                 var hash_value = row_data[hashType];

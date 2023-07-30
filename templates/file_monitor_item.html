@@ -1,13 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <!--page title-->
     <script>
         const file_name = "{{ data[0] }}";
         document.title = file_name;
     </script>
 
-    <!--generate layout-->
     <div class="container">
         <h1 id="page-title" class="copyable">File: {{ data[0] }}</h1>
         <p class="text-muted">Notice: Click an item to copy</p>
