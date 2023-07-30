@@ -55,22 +55,6 @@
           <tbody>
           </tbody>
       </table>
-
-      <h2>TLSH</h2>
-      <table id="table_tlsh" class="table table-striped table-hover">
-          <thead>
-            <tr>
-              <th scope="col">Check VT</th>
-              <th scope="col">TLSH</th>
-              <th scope="col">Path</th>
-              <th scope="col">File Size</th>
-              <th scope="col">Date Time</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-      </table>
-
     </div>
 
     <script>
@@ -269,68 +253,6 @@
                 },
             });
 
-
-
-            $('#table_tlsh').DataTable({
-                ...commonConfig,
-                "ajax": {
-                    "url": "/data_tlsh",
-                    "type": "POST",
-                    "data": {
-                        "file": file_name
-                    },
-                    "dataSrc": function (json) {
-                        return json.data;
-                    },
-                },
-                "columns": [
-                    {
-                        "data": null,
-                        "defaultContent": "<button class='btn btn-primary vt-check'>Check</button>",
-                        "createdCell": function (td, cellData, rowData, row, col) {
-                            if (rowData.positives > 0) {
-                                $(td).find('button').removeClass('btn-primary').addClass('btn-danger').prop('disabled', true);
-                            } else if (rowData.positives == 0) {
-                                $(td).find('button').removeClass('btn-primary').addClass('btn-success').prop('disabled', true);
-                            }
-                        }
-                    },
-                    {
-                            "data": "tlsh",
-                            "render": function(data, type, row) {
-                                return '<a href="/hash_result?hash=' + data + '&file_name=' + file_name + '">' + data + '</a>';
-                            }
-                    },
-                    { "data": "path" },
-                    { "data": "file_size" },
-                    { "data": "date_time" }
-                ],
-                "createdRow": function (row, data, dataIndex) {
-                    $.ajax({
-                        url: '/get_hash_status',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify({
-                            'hash_value': data.tlsh
-                        }),
-                        success: function (response) {
-                            if (response.error) {
-                                console.log(response.error);
-                            } else {
-                                if (response.positives > 0) {
-                                    $(row).find('.vt-check').addClass('btn-danger');
-                                } else {
-                                    $(row).find('.vt-check').addClass('btn-success');
-                                }
-                            }
-                        },
-                        error: function (error) {
-                            console.error(error);
-                        }
-                    });
-                },
-            });
-
             $(document).on('click', '.vt-check', function() {
                 var tableId = $(this).closest('table').attr('id');
                 var hashType = tableId.split('_')[1]; // send sha256, sha1, md5 or tlsh
@@ -358,5 +280,5 @@
             });
         });
     </script>
-    <!-- <script src="/static/js/custom.js"></script -->
+      {% include 'tlsh_per_file.html' %}
 {% endblock %}
