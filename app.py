@@ -5,6 +5,8 @@ import os
 import urllib.parse
 from urllib.parse import unquote
 from scripts.virus_check import run_vt_check
+from scripts.tlsh_compare import tlsh_compare
+import tlsh
 
 app = Flask(__name__)
 
@@ -323,23 +325,135 @@ def handle_vt_check():
         return jsonify({'error': str(e)}), 500
 
 #hash_result.html
-
 @app.route('/hash_result')
 def hash_result():
     hash_value = request.args.get('hash')
     file_name = request.args.get('file_name')
 
-    con = sqlite3.connect(db_full_path)
-    con.row_factory = sqlite3.Row
-    cur = con.cursor()
+    conn = sqlite3.connect(db_full_path)
+    cur = conn.cursor()
 
-    cur.execute("SELECT * FROM virus_total_results WHERE hash = ? OR sha1 = ? OR sha256 = ? OR md5 = ?", (hash_value, hash_value, hash_value, hash_value))
-    result = cur.fetchone()
+    cur.execute("SELECT * FROM virus_total_results WHERE hash = ?", (hash_value,))
+    virus_total_results_data = cur.fetchone()
 
-    if result:
-        return render_template('hash_result.html', hash=hash_value, file_name=file_name, scan_date=result['scan_date'], positives=result['positives'], permalink=result['permalink'], scan_result=result['scan_result'], scan_id=result['scan_id'], sha1=result['sha1'], sha256=result['sha256'], md5=result['md5'], resource=result['resource'], response_code=result['response_code'])
+    if not virus_total_results_data:
+        cur.execute("SELECT * FROM virus_total_results WHERE sha256 = ? OR sha1 = ? OR md5 = ?", (hash_value, hash_value, hash_value))
+        virus_total_results_data = cur.fetchone()
+
+    conn.close()
+
+    if not virus_total_results_data:
+        hash_value = None
+        scan_date = None
+        positives = None
+        permalink = None
+        scan_result = None
+        scan_id = None
+        sha1 = None
+        sha256 = None
+        md5 = None
+        resource = None
+        response_code = None
     else:
-        return render_template('hash_result.html', hash=hash_value, file_name=file_name)
+        hash_value, scan_date, positives, permalink, scan_result, scan_id, sha1, sha256, md5, resource, response_code = virus_total_results_data
+
+    return render_template('hash_result.html',
+                           hash=hash_value,
+                           scan_date=scan_date,
+                           positives=positives,
+                           permalink=permalink,
+                           scan_result=scan_result,
+                           scan_id=scan_id,
+                           sha1=sha1,
+                           sha256=sha256,
+                           md5=md5,
+                           resource=resource,
+                           response_code=response_code,
+                           file_name=file_name)
+
+#tlsh_comparison.html
+@app.route('/tlsh_comparison')
+def tlsh_comparison():
+    tlsh_value = request.args.get('tlsh')
+
+    conn = sqlite3.connect(db_full_path)
+    cur = conn.cursor()
+
+    cur.execute("SELECT file_name FROM tlsh_scanner WHERE tlsh = ?", (tlsh_value,))
+    file_name_row = cur.fetchone()
+    file_name = file_name_row[0] if file_name_row else None
+
+    cur.execute("SELECT tlsh FROM tlsh_scanner")
+    all_tlsh_values = [row[0] for row in cur.fetchall()]
+
+    conn.close()
+
+    comparison_data = []
+    checked_values_count = 0
+    for other_tlsh in all_tlsh_values:
+        if other_tlsh and other_tlsh != 'TNULL':
+            try:
+                diff = tlsh.diff(tlsh_value, other_tlsh)
+                if diff > 0: 
+                    comparison_data.append({
+                        'tlsh': other_tlsh,
+                        'diff': diff
+                    })
+                checked_values_count += 1
+            except ValueError:
+                pass
+
+    comparison_data.sort(key=lambda x: x['diff'])
+
+    return render_template('tlsh_comparison.html',
+                           tlsh=tlsh_value,
+                           file_name=file_name,
+                           comparison_data=comparison_data,
+                           checked_values_count=checked_values_count)
+
+
+#tlsh_comparison.html data tables comparison data route
+@app.route('/data_tlsh_comparison', methods=['POST'])
+def data_tlsh_comparison():
+    tlsh_value = request.form.get('tlsh')
+    draw = request.form.get('draw', default=1, type=int)
+    start = request.form.get('start', default=0, type=int)
+    length = request.form.get('length', default=10, type=int)
+    search_value = request.form.get('search[value]', default="", type=str)
+
+    conn = sqlite3.connect(db_full_path)
+    cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) FROM tlsh_scanner")
+    records_total = cur.fetchone()[0]
+
+    cur.execute("SELECT tlsh, file_name, path, file_size, date_time FROM tlsh_scanner")
+    all_tlsh_data = cur.fetchall()
+
+    conn.close()
+
+    comparison_data = []
+    for other_tlsh, file_name, path, file_size, date_time in all_tlsh_data:
+        diff = tlsh.diff(tlsh_value, other_tlsh)
+        if diff > 0:
+            comparison_data.append({
+                'tlsh': other_tlsh,
+                'file_name': file_name,
+                'path': path,
+                'file_size': file_size,
+                'date_time': date_time,
+                'diff': diff
+            })
+
+    comparison_data.sort(key=lambda x: x['diff'])
+    comparison_data = comparison_data[start:start+length]
+
+    return jsonify({
+        'draw': draw,
+        'recordsTotal': records_total,
+        'recordsFiltered': len(comparison_data),
+        'data': comparison_data
+    })
 
 
 #file_monitor stuff

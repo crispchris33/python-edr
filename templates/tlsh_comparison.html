@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container">
+        <h2>TLSH Comparison for {{ file_name }}</h1>
+        <h4>TLSH: {{ tlsh }}</h2>
+            <p class="text-muted">Checked against {{ checked_values_count }} other hashes.</p>
+        <table id="comparisonTable" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>TLSH</th>
+                    <th>File Name</th>
+                    <th>Path</th>
+                    <th>File Size</th>
+                    <th>Date Time</th>
+                    <th>Difference</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+{% endblock %}

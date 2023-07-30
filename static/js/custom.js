@@ -108,3 +108,58 @@ $(document).ready(function() {
       });
   });
 });
+
+//tlsh list
+$(document).ready(function() {
+  var tableName = '#tlshTable';
+  var file_name = $(tableName).data('file-name');
+
+  $(tableName).DataTable({
+      "processing": true,
+      "serverSide": true,
+      "ajax": {
+          "url": "/data_tlsh",
+          "type": "POST",
+          "data": {
+              "file": file_name
+          }
+      },
+      "columns": [
+          { 
+              "data": "tlsh",
+              "render": function(data, type, row) {
+                  return '<a href="/tlsh_comparison?tlsh=' + data + '">' + data + '</a>';
+              }
+          },
+          { "data": "path" },
+          { "data": "file_size" },
+          { "data": "date_time" }
+      ]
+  });
+});
+
+//TLSH comparison datatable tlsh_comparison.html
+$(document).ready(function() {
+  var tableName = '#tlshComparisonTable';
+  var tlsh_value = $(tableName).data('tlsh-value');
+
+  $(tableName).DataTable({
+      "processing": true,
+      "serverSide": true,
+      "ajax": {
+          "url": "/data_tlsh_comparison",
+          "type": "POST",
+          "data": {
+              "tlsh": tlsh_value
+          }
+      },
+      "columns": [
+          { "data": "tlsh" },
+          { "data": "file_name" },
+          { "data": "path" },
+          { "data": "file_size" },
+          { "data": "date_time" },
+          { "data": "diff" }
+      ]
+  });
+});
