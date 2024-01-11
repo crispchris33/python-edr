@@ -1,4 +1,4 @@
-# python edr\
+# python edr
 
 
 # Set up 
